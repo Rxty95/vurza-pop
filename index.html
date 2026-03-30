@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VURZA – BGMI Popularity Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#FFD700;--gold2:#FFA500;--neon:#00FFF7;--neon2:#00e5ff;
+  --red:#FF2D55;--bg:#000;--bg2:#0a0a0a;--bg3:#111;--bg4:#1a1a1a;
+  --border:#2a2a2a;--text:#e8e8e8;--text2:#aaa;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:16px;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0a0a0a}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--gold),var(--gold2));border-radius:3px}
+
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,215,0,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,215,0,0.025) 1px,transparent 1px);background-size:55px 55px}
+
+/* AUTH */
+#auth-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#0d0d00,#000 70%);overflow:hidden}
+#auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 50%,rgba(255,215,0,0.06),transparent 70%);animation:pglow 4s ease-in-out infinite alternate}
+@keyframes pglow{from{opacity:.5}to{opacity:1}}
+.auth-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.auth-particles span{position:absolute;width:2px;height:2px;border-radius:50%;animation:fup linear infinite;opacity:0}
+@keyframes fup{0%{transform:translateY(100vh) translateX(0);opacity:0}10%{opacity:1}90%{opacity:.4}100%{transform:translateY(-10vh) translateX(var(--drift));opacity:0}}
+.auth-box{position:relative;z-index:2;width:100%;max-width:460px;background:linear-gradient(145deg,#0f0f0f,#150f00);border:1px solid rgba(255,215,0,.22);border-radius:20px;padding:48px 44px;box-shadow:0 0 60px rgba(255,215,0,.07),0 0 120px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,215,0,.08);animation:aslide .6s cubic-bezier(.16,1,.3,1);margin:16px}
+@keyframes aslide{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.auth-logo{text-align:center;margin-bottom:10px}
+.logo-main{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,var(--gold) 0%,#fff8e1 40%,var(--gold2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
+.logo-sub{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:4px;color:var(--text2);text-transform:uppercase;margin-top:5px;display:block}
+.auth-divider{width:80px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px auto 26px}
+.auth-tabs{display:flex;margin-bottom:26px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.auth-tab{flex:1;padding:11px;text-align:center;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;background:transparent;color:var(--text2);border:none;transition:all .3s}
+.auth-tab.active{background:linear-gradient(135deg,rgba(255,215,0,.13),rgba(255,165,0,.07));color:var(--gold);box-shadow:inset 0 -2px 0 var(--gold)}
+.auth-form{display:flex;flex-direction:column;gap:15px}
+.auth-field{position:relative}
+.auth-field label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:6px;font-family:'Share Tech Mono',monospace}
+.auth-field input{width:100%;padding:13px 16px 13px 44px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;transition:all .3s;outline:none}
+.auth-field input:focus{border-color:rgba(255,215,0,.5);background:rgba(255,215,0,.02);box-shadow:0 0 0 3px rgba(255,215,0,.05)}
+.auth-field .field-icon{position:absolute;left:14px;top:38px;font-size:16px;color:var(--gold2);opacity:.7}
+.auth-btn{margin-top:8px;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#000;transition:all .3s;box-shadow:0 4px 20px rgba(255,215,0,.3)}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,215,0,.45)}
+.auth-btn:active{transform:translateY(0)}
+.auth-error{color:var(--red);font-size:11px;letter-spacing:1px;font-family:'Share Tech Mono',monospace;display:none;text-align:center;margin-top:2px}
+
+/* APP */
+#app{display:none}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,.1);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:66px}
+.nav-logo{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,var(--gold),#fff8e1,var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-user{font-size:12px;color:var(--text2);letter-spacing:1px;font-family:'Share Tech Mono',monospace}
+.nav-user span{color:var(--gold)}
+.cart-btn{position:relative;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.22);border-radius:10px;padding:9px 18px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;transition:all .3s}
+.cart-btn:hover{background:rgba(255,215,0,.13);border-color:rgba(255,215,0,.5)}
+.cart-count{position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;animation:bnc .3s cubic-bezier(.36,.07,.19,.97)}
+@keyframes bnc{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+.logout-btn{background:none;border:1px solid rgba(255,45,85,.3);border-radius:8px;padding:8px 14px;cursor:pointer;color:rgba(255,100,120,.8);font-size:12px;letter-spacing:1px;font-family:'Share Tech Mono',monospace;transition:all .3s}
+.logout-btn:hover{border-color:var(--red);color:var(--red);background:rgba(255,45,85,.05)}
+
+/* HERO */
+.hero{position:relative;text-align:center;padding:65px 20px 45px;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(255,215,0,.065),transparent 70%);pointer-events:none}
+.hero-eyebrow{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:5px;color:var(--neon);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:12px}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';flex:1;max-width:80px;height:1px}
+.hero-eyebrow::before{background:linear-gradient(90deg,transparent,var(--neon))}
+.hero-eyebrow::after{background:linear-gradient(90deg,var(--neon),transparent)}
+.hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(38px,8vw,82px);font-weight:900;letter-spacing:12px;line-height:1;background:linear-gradient(135deg,var(--gold) 0%,#fffde0 35%,var(--gold2) 70%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 28px rgba(255,215,0,.22));margin-bottom:12px}
+.hero-tagline{font-size:15px;color:var(--text2);letter-spacing:3px;font-family:'Rajdhani',sans-serif;font-weight:500}
+
+/* HOW TO PURCHASE */
+.how-section{max-width:920px;margin:0 auto 52px;padding:0 20px}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.section-header h2{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;letter-spacing:4px;color:var(--gold);text-transform:uppercase;white-space:nowrap}
+.section-header::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,215,0,.35),transparent)}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px}
+.how-step{background:linear-gradient(145deg,#0f0f0f,#110e00);border:1px solid rgba(255,215,0,.1);border-radius:16px;padding:20px 16px;text-align:center;position:relative;overflow:hidden;transition:border-color .3s,transform .3s}
+.how-step:hover{border-color:rgba(255,215,0,.32);transform:translateY(-3px)}
+.how-step::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s}
+.how-step:hover::before{opacity:1}
+.how-num{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:rgba(255,215,0,.12);line-height:1;margin-bottom:10px}
+.how-icon{font-size:24px;margin-bottom:8px;display:block}
+.how-text{font-size:13px;color:var(--text2);line-height:1.6;font-weight:500}
+.how-text strong{color:var(--gold)}
+
+/* PRODUCTS */
+.products-section{max-width:1300px;margin:0 auto;padding:0 20px 64px}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:18px}
+.product-card{background:linear-gradient(145deg,#0f0f0f,#120e00);border:1px solid rgba(255,215,0,.09);border-radius:18px;padding:22px 18px 18px;position:relative;overflow:hidden;transition:all .35s cubic-bezier(.16,1,.3,1);animation:fic .5s ease both}
+@keyframes fic{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.product-card:hover{border-color:rgba(255,215,0,.38);transform:translateY(-6px) scale(1.012);box-shadow:0 16px 48px rgba(255,215,0,.09),0 0 0 1px rgba(255,215,0,.09)}
+.product-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,215,0,.035),transparent);pointer-events:none}
+.badge-60{position:absolute;top:13px;right:13px;background:var(--red);color:#fff;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;padding:4px 8px;border-radius:6px;letter-spacing:1px;box-shadow:0 2px 10px rgba(255,45,85,.5)}
+.product-emoji{font-size:30px;margin-bottom:12px;display:block;line-height:1}
+.product-name{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:12px;line-height:1.4;text-transform:uppercase}
+.product-pop{display:inline-flex;align-items:center;gap:5px;background:rgba(0,255,247,.07);border:1px solid rgba(0,255,247,.18);border-radius:6px;padding:4px 10px;margin-bottom:12px}
+.pop-label{font-size:11px;color:var(--neon2);letter-spacing:.8px;font-family:'Share Tech Mono',monospace}
+.product-prices{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.product-uc{font-size:11px;color:var(--text2);font-family:'Share Tech Mono',monospace}
+.product-uc span{text-decoration:line-through;opacity:.55}
+.product-inr{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700;color:var(--gold)}
+.add-to-cart{width:100%;padding:11px;background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,165,0,.05));border:1px solid rgba(255,215,0,.28);border-radius:10px;cursor:pointer;color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:8px}
+.add-to-cart:hover{background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(255,165,0,.1));border-color:var(--gold);box-shadow:0 0 18px rgba(255,215,0,.14)}
+.add-to-cart.added{background:linear-gradient(135deg,rgba(255,215,0,.22),rgba(255,165,0,.12));color:#fff;border-color:var(--gold)}
+
+/* CART OVERLAY */
+#cart-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:flex-end}
+#cart-overlay.open{display:flex}
+.cart-panel{width:100%;max-width:440px;height:100vh;background:linear-gradient(180deg,#0d0d00,#0a0a0a);border-left:1px solid rgba(255,215,0,.13);display:flex;flex-direction:column;animation:sir .35s cubic-bezier(.16,1,.3,1)}
+@keyframes sir{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.cart-header{padding:22px 24px;border-bottom:1px solid rgba(255,215,0,.09);display:flex;align-items:center;justify-content:space-between}
+.cart-header h3{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;color:var(--gold)}
+.cart-close{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--text2);font-size:18px;transition:all .2s;line-height:1}
+.cart-close:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.cart-user-badge{margin:14px 24px 0;background:rgba(0,255,247,.05);border:1px solid rgba(0,255,247,.14);border-radius:10px;padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--neon2)}
+.cart-user-badge span{color:var(--neon);font-weight:700}
+.cart-items{flex:1;overflow-y:auto;padding:14px 24px;display:flex;flex-direction:column;gap:10px}
+.cart-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:12px}
+.cart-item-icon{font-size:22px}
+.cart-item-info{flex:1}
+.cart-item-name{font-weight:600;font-size:13px;color:#fff;letter-spacing:.5px}
+.cart-item-price{color:var(--gold);font-family:'Orbitron',sans-serif;font-size:12px;margin-top:3px}
+.cart-item-remove{background:none;border:none;cursor:pointer;color:rgba(255,45,85,.55);font-size:17px;padding:4px;transition:color .2s;line-height:1}
+.cart-item-remove:hover{color:var(--red)}
+.cart-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);gap:12px}
+.cart-empty .empty-icon{font-size:46px;opacity:.25}
+.cart-empty p{font-size:14px;letter-spacing:1px}
+.cart-footer{padding:22px 24px;border-top:1px solid rgba(255,215,0,.09)}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.cart-total-label{font-size:12px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;font-family:'Share Tech Mono',monospace}
+.cart-total-val{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;color:var(--gold)}
+.checkout-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#000;transition:all .3s;box-shadow:0 4px 20px rgba(255,215,0,.28)}
+.checkout-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,215,0,.42)}
+.checkout-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* CHECKOUT MODAL */
+#checkout-modal{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
+#checkout-modal.open{display:flex}
+.checkout-box{background:linear-gradient(145deg,#0f0f0f,#130f00);border:1px solid rgba(255,215,0,.22);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:38px;animation:pin .4s cubic-bezier(.16,1,.3,1)}
+@keyframes pin{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.checkout-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;letter-spacing:4px;color:var(--gold);text-align:center;margin-bottom:28px}
+.checkout-summary-title{font-size:11px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;font-family:'Share Tech Mono',monospace;margin-bottom:12px}
+.checkout-items-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.checkout-item-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
+.checkout-item-row span:first-child{font-size:13px;color:var(--text)}
+.checkout-item-row span:last-child{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--gold)}
+.upi-box{background:linear-gradient(135deg,rgba(255,215,0,.07),rgba(255,165,0,.03));border:2px solid rgba(255,215,0,.32);border-radius:14px;padding:24px;text-align:center;margin:18px 0;position:relative;overflow:hidden}
+.upi-box::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(transparent,rgba(255,215,0,.04) 90deg,transparent 180deg);animation:sg 8s linear infinite}
+@keyframes sg{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.upi-label{font-size:10px;letter-spacing:3px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-bottom:8px}
+.upi-id{font-family:'Orbitron',sans-serif;font-size:19px;font-weight:700;color:var(--gold);letter-spacing:2px;text-shadow:0 0 20px rgba(255,215,0,.35);position:relative;z-index:1}
+.upi-total{font-size:12px;color:var(--text2);margin-top:8px;font-family:'Share Tech Mono',monospace}
+.upi-total strong{color:var(--gold);font-size:20px;font-family:'Orbitron',sans-serif}
+.checkout-note{background:rgba(0,255,247,.05);border:1px solid rgba(0,255,247,.13);border-radius:10px;padding:13px 15px;margin:14px 0;font-size:13px;color:var(--neon2);line-height:1.6;letter-spacing:.4px}
+.checkout-actions{display:flex;gap:12px;margin-top:18px}
+.btn-whatsapp{flex:1;padding:15px;background:linear-gradient(135deg,#25D366,#1da851);border:none;border-radius:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;color:#fff;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .3s;box-shadow:0 4px 20px rgba(37,211,102,.28)}
+.btn-whatsapp:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(37,211,102,.4)}
+.btn-close-checkout{padding:15px 20px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;cursor:pointer;color:var(--text2);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;letter-spacing:1px;transition:all .3s}
+.btn-close-checkout:hover{border-color:rgba(255,255,255,.3);color:#fff}
+
+/* TOAST */
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(18px);background:linear-gradient(135deg,#1a1400,#0f0f0f);border:1px solid rgba(255,215,0,.28);border-radius:10px;padding:11px 22px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;color:var(--gold);z-index:999;opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);box-shadow:0 8px 28px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FLOATING WA */
+.float-wa{position:fixed;bottom:26px;right:26px;z-index:400;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#25D366,#1da851);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(37,211,102,.48);cursor:pointer;transition:all .3s;border:none;animation:pwa 2s ease-in-out infinite}
+@keyframes pwa{0%,100%{box-shadow:0 4px 22px rgba(37,211,102,.48)}50%{box-shadow:0 4px 36px rgba(37,211,102,.72),0 0 0 8px rgba(37,211,102,.1)}}
+.float-wa:hover{transform:scale(1.1) translateY(-3px);animation:none;box-shadow:0 8px 32px rgba(37,211,102,.62)}
+.float-wa svg{width:28px;height:28px;fill:#fff}
+.wa-tooltip{position:absolute;right:68px;background:#111;border:1px solid rgba(37,211,102,.28);color:#fff;font-size:11px;font-family:'Rajdhani',sans-serif;font-weight:600;padding:7px 13px;border-radius:8px;white-space:nowrap;letter-spacing:1px;opacity:0;transition:opacity .3s;pointer-events:none}
+.float-wa:hover .wa-tooltip{opacity:1}
+
+/* FOOTER */
+footer{text-align:center;padding:30px 20px;border-top:1px solid rgba(255,215,0,.07);background:linear-gradient(180deg,transparent,rgba(255,215,0,.018))}
+footer p{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--text2)}
+footer p span{color:var(--gold)}
+
+@media(max-width:600px){
+  .auth-box{padding:30px 22px}.how-grid{grid-template-columns:1fr 1fr}
+  .products-grid{grid-template-columns:1fr 1fr;gap:12px}.product-card{padding:16px 12px 14px}
+  .product-name{font-size:10px}.product-inr{font-size:15px}
+  nav{padding:0 12px}.nav-user{display:none}.cart-panel{max-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-particles" id="particles"></div>
+  <div class="auth-box">
+    <div class="auth-logo">
+      <span class="logo-main">VURZA</span>
+      <span class="logo-sub">BGMI Popularity Store</span>
+    </div>
+    <div class="auth-divider"></div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div class="auth-form">
+      <div class="auth-field">
+        <label>Mobile Number</label>
+        <span class="field-icon">📱</span>
+        <input type="tel" id="inp-mobile" placeholder="Enter 10-digit mobile number" maxlength="10">
+      </div>
+      <div class="auth-field">
+        <label>Email Address</label>
+        <span class="field-icon">✉️</span>
+        <input type="email" id="inp-email" placeholder="Enter your email">
+      </div>
+      <div class="auth-field">
+        <label>BGMI Gaming ID (Character ID)</label>
+        <span class="field-icon">🎮</span>
+        <input type="text" id="inp-gameid" placeholder="e.g. 5123456789">
+      </div>
+      <p class="auth-error" id="auth-error">Please fill all fields correctly.</p>
+      <button class="auth-btn" id="auth-submit-btn" onclick="handleAuth()">LOGIN &amp; ENTER STORE</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <nav>
+    <div class="nav-logo">VURZA</div>
+    <div class="nav-right">
+      <div class="nav-user">🎮 <span id="nav-gameid">—</span></div>
+      <button class="cart-btn" onclick="openCart()">
+        🛒 Cart
+        <span class="cart-count" id="cart-count" style="display:none">0</span>
+      </button>
+      <button class="logout-btn" onclick="logout()">LOGOUT</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-eyebrow">⚡ INDIA'S #1 BGMI STORE ⚡</div>
+    <h1>VURZA</h1>
+    <p class="hero-tagline">Dominate The Lobby — Get Maximum Popularity</p>
+  </div>
+
+  <div class="how-section">
+    <div class="section-header"><h2>⚡ How to Purchase</h2></div>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="how-num">01</div>
+        <span class="how-icon">🔐</span>
+        <p class="how-text">Login with your <strong>details</strong> to access the store</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">02</div>
+        <span class="how-icon">🛒</span>
+        <p class="how-text">Add your favorite <strong>Popularity items</strong> to the cart</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">03</div>
+        <span class="how-icon">💳</span>
+        <p class="how-text">Pay total to UPI: <strong>7481930313@mbk</strong></p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">04</div>
+        <span class="how-icon">📲</span>
+        <p class="how-text">Send <strong>screenshot + order</strong> via WhatsApp button</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">05</div>
+        <span class="how-icon">🚀</span>
+        <p class="how-text">Order processed &amp; sent to your <strong>Gaming ID instantly</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="products-section">
+    <div class="section-header"><h2>🔥 Popularity Items — 60% OFF</h2></div>
+    <div class="products-grid" id="products-grid"></div>
+  </div>
+
+  <footer><p>Thank you for choosing <span>VURZA</span> — Your Popularity Partner.</p></footer>
+</div>
+
+<!-- CART OVERLAY -->
+<div id="cart-overlay" onclick="closeCartOnBg(event)">
+  <div class="cart-panel">
+    <div class="cart-header">
+      <h3>🛒 YOUR CART</h3>
+      <button class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-user-badge">Gaming ID: <span id="cart-gameid">—</span></div>
+    <div class="cart-items" id="cart-items-list"></div>
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-val" id="cart-total">₹0</span>
+      </div>
+      <button class="checkout-btn" id="checkout-btn" onclick="openCheckout()" disabled>PROCEED TO CHECKOUT</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div id="checkout-modal">
+  <div class="checkout-box">
+    <div class="checkout-title">💰 ORDER CHECKOUT</div>
+    <div class="checkout-summary-title">Order Summary</div>
+    <div class="checkout-items-list" id="checkout-items"></div>
+    <div class="upi-box">
+      <div class="upi-label">TOTAL AMOUNT TO PAY VIA UPI</div>
+      <div class="upi-id">7481930313@mbk</div>
+      <div class="upi-total">Pay: <strong id="checkout-total">₹0</strong></div>
+    </div>
+    <div class="checkout-note">📸 After payment, tap the WhatsApp button below — attach your payment screenshot and send your order. It will be delivered to your Gaming ID instantly!</div>
+    <div class="checkout-actions">
+      <button class="btn-whatsapp" onclick="sendWhatsApp()">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Send via WhatsApp
+      </button>
+      <button class="btn-close-checkout" onclick="closeCheckout()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING WHATSAPP -->
+<button class="float-wa" onclick="sendWhatsApp()">
+  <span class="wa-tooltip">📸 Order via WhatsApp</span>
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PRODUCTS=[
+  {name:"Motorcycle",emoji:"🏍️",pop:"+200",uc:"10 UC",price:4},
+  {name:"Gold Banknote",emoji:"💰",pop:"+800",uc:"50 UC",price:20},
+  {name:"Applause",emoji:"👏",pop:"+1,600",uc:"80 UC",price:32},
+  {name:"Fried Egg (Pan)",emoji:"🍳",pop:"+2,000",uc:"100 UC",price:40},
+  {name:"Sports Car",emoji:"🏎️",pop:"+2,000",uc:"100 UC",price:40},
+  {name:"Money Gun",emoji:"💸",pop:"+3,000",uc:"150 UC",price:60},
+  {name:"Flying Kiss",emoji:"💋",pop:"+4,000",uc:"200 UC",price:80},
+  {name:"Balloons",emoji:"🎈",pop:"+6,000",uc:"300 UC",price:120},
+  {name:"Winner's Trophy",emoji:"🏆",pop:"+6,000",uc:"300 UC",price:120},
+  {name:"Cake",emoji:"🎂",pop:"+10,000",uc:"500 UC",price:200},
+  {name:"Dynamic Motorcycle",emoji:"⚡",pop:"+20,000",uc:"800 UC",price:320},
+  {name:"Airplane",emoji:"✈️",pop:"+25,000",uc:"1,000 UC",price:400},
+  {name:"Airship (Glider)",emoji:"🛸",pop:"+50,000",uc:"2,000 UC",price:800},
+  {name:"Romantic Fireworks",emoji:"🎆",pop:"+75,000",uc:"3,000 UC",price:1200},
+  {name:"Desert Camp",emoji:"🏕️",pop:"+75,000",uc:"3,000 UC",price:1200},
+  {name:"Treasure",emoji:"💎",pop:"+1,25,000",uc:"5,000 UC",price:2000},
+  {name:"Helicopter",emoji:"🚁",pop:"+1,25,000",uc:"5,000 UC",price:2000},
+  {name:"Lion",emoji:"🦁",pop:"+2,40,000",uc:"8,000 UC",price:3200},
+  {name:"Super Sports Car",emoji:"🚗",pop:"+2,67,000",uc:"8,888 UC",price:3555},
+  {name:"Private Plane",emoji:"🛩️",pop:"+3,00,000",uc:"9,999 UC",price:4000},
+];
+
+const WA_NUMBER="917481930313";
+let cart=[];
+let currentUser=null;
+
+// Particles
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<28;i++){
+    const s=document.createElement('span');
+    s.style.cssText=`left:${Math.random()*100}%;bottom:0;width:${1+Math.random()*3}px;height:${1+Math.random()*3}px;animation-duration:${4+Math.random()*8}s;animation-delay:${Math.random()*6}s;--drift:${(Math.random()-.5)*200}px;background:${Math.random()>.5?'#FFD700':'#00FFF7'}`;
+    c.appendChild(s);
+  }
+})();
+
+// AUTH
+let currentTab='login';
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>{
+    b.classList.toggle('active',(tab==='login'&&i===0)||(tab==='signup'&&i===1));
+  });
+  document.getElementById('auth-submit-btn').textContent=tab==='login'?'LOGIN & ENTER STORE':'CREATE ACCOUNT';
+}
+
+function handleAuth(){
+  const mobile=document.getElementById('inp-mobile').value.trim();
+  const email=document.getElementById('inp-email').value.trim();
+  const gameid=document.getElementById('inp-gameid').value.trim();
+  const err=document.getElementById('auth-error');
+  if(mobile.length<10||!/^\d+$/.test(mobile)){err.textContent='⚠ Enter a valid 10-digit mobile number.';err.style.display='block';return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='⚠ Enter a valid email address.';err.style.display='block';return}
+  if(gameid.length<5){err.textContent='⚠ Enter a valid BGMI Gaming ID (min 5 chars).';err.style.display='block';return}
+  err.style.display='none';
+  currentUser={mobile,email,gameid};
+  localStorage.setItem('vurza_user',JSON.stringify(currentUser));
+  enterStore();
+}
+
+function enterStore(){
+  const s=document.getElementById('auth-screen');
+  s.style.transition='opacity .55s,transform .55s';
+  s.style.opacity='0';s.style.transform='scale(1.04)';
+  setTimeout(()=>{
+    s.style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('nav-gameid').textContent=currentUser.gameid;
+    document.getElementById('cart-gameid').textContent=currentUser.gameid;
+    buildProducts();
+  },560);
+}
+
+function logout(){
+  localStorage.removeItem('vurza_user');
+  cart=[];
+  document.getElementById('app').style.display='none';
+  const s=document.getElementById('auth-screen');
+  s.style.cssText='display:flex;opacity:1;transform:scale(1)';
+  ['inp-mobile','inp-email','inp-gameid'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cart-count').style.display='none';
+  currentUser=null;
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('vurza_user');
+  if(saved){try{currentUser=JSON.parse(saved);document.getElementById('auth-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('nav-gameid').textContent=currentUser.gameid;document.getElementById('cart-gameid').textContent=currentUser.gameid;buildProducts()}catch(e){localStorage.removeItem('vurza_user')}}
+});
+
+// PRODUCTS
+function buildProducts(){
+  const grid=document.getElementById('products-grid');
+  grid.innerHTML='';
+  PRODUCTS.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className='product-card';
+    div.style.animationDelay=(i*.04)+'s';
+    div.innerHTML=`
+      <span class="badge-60">60% OFF</span>
+      <span class="product-emoji">${p.emoji}</span>
+      <div class="product-name">${p.name}</div>
+      <div class="product-pop"><span class="pop-label">⬆ POPULARITY ${p.pop}</span></div>
+      <div class="product-prices">
+        <div class="product-uc">Original: <span>${p.uc}</span></div>
+        <div class="product-inr">₹${p.price}</div>
+      </div>
+      <button class="add-to-cart" id="btn-${i}" onclick="addToCart(${i})">＋ ADD TO CART</button>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// CART
+function addToCart(idx){
+  const p=PRODUCTS[idx];
+  cart.push({...p,idx,cartId:Date.now()+Math.random()});
+  updateCartBadge();
+  const btn=document.getElementById('btn-'+idx);
+  btn.textContent='✓ ADDED';btn.classList.add('added');
+  setTimeout(()=>{btn.textContent='＋ ADD TO CART';btn.classList.remove('added')},1800);
+  showToast(`${p.emoji} ${p.name} added!`);
+}
+
+function removeFromCart(ci){
+  cart.splice(ci,1);
+  updateCartBadge();
+  renderCartItems();
+}
+
+function updateCartBadge(){
+  const el=document.getElementById('cart-count');
+  if(cart.length>0){el.style.display='flex';el.textContent=cart.length;el.style.animation='none';requestAnimationFrame(()=>{el.style.animation=''})}
+  else el.style.display='none';
+}
+
+function getTotal(){return cart.reduce((s,i)=>s+i.price,0)}
+
+function renderCartItems(){
+  const list=document.getElementById('cart-items-list');
+  const checkBtn=document.getElementById('checkout-btn');
+  if(cart.length===0){
+    list.innerHTML='<div class="cart-empty"><div class="empty-icon">🛒</div><p>Your cart is empty</p></div>';
+    checkBtn.disabled=true;
+    document.getElementById('cart-total').textContent='₹0';
+    return;
+  }
+  checkBtn.disabled=false;
+  list.innerHTML='';
+  cart.forEach((item,ci)=>{
+    const d=document.createElement('div');d.className='cart-item';
+    d.innerHTML=`<span class="cart-item-icon">${item.emoji}</span><div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">₹${item.price}</div></div><button class="cart-item-remove" onclick="removeFromCart(${ci})">🗑</button>`;
+    list.appendChild(d);
+  });
+  document.getElementById('cart-total').textContent='₹'+getTotal();
+}
+
+function openCart(){renderCartItems();document.getElementById('cart-overlay').classList.add('open');document.body.style.overflow='hidden'}
+function closeCart(){document.getElementById('cart-overlay').classList.remove('open');document.body.style.overflow=''}
+function closeCartOnBg(e){if(e.target===document.getElementById('cart-overlay'))closeCart()}
+
+// CHECKOUT
+function openCheckout(){
+  if(cart.length===0){showToast('⚠ Cart is empty!');return}
+  const el=document.getElementById('checkout-items');
+  el.innerHTML='';
+  cart.forEach(item=>{
+    const r=document.createElement('div');r.className='checkout-item-row';
+    r.innerHTML=`<span>${item.emoji} ${item.name} (${item.pop})</span><span>₹${item.price}</span>`;
+    el.appendChild(r);
+  });
+  document.getElementById('checkout-total').textContent='₹'+getTotal();
+  document.getElementById('checkout-modal').classList.add('open');
+  closeCart();
+}
+function closeCheckout(){document.getElementById('checkout-modal').classList.remove('open')}
+
+// WHATSAPP
+function sendWhatsApp(){
+  if(!currentUser){showToast('Please login first!');return}
+  const total=getTotal();
+  const items=cart.length>0
+    ?cart.map(i=>`  • ${i.emoji} ${i.name} (Popularity ${i.pop}) — ₹${i.price}`).join('\n')
+    :'  (No items in cart yet)';
+  const msg=`🎮 *VURZA BGMI ORDER* 🎮\n\n`+
+    `👤 *Gaming ID:* ${currentUser.gameid}\n`+
+    `📱 *Mobile:* ${currentUser.mobile}\n`+
+    `📧 *Email:* ${currentUser.email}\n\n`+
+    `📦 *Items Ordered:*\n${items}\n\n`+
+    `💰 *Total Amount Paid:* ₹${total}\n`+
+    `🏦 *UPI ID:* 7481930313@mbk\n\n`+
+    `📸 *[Please attach your payment screenshot here]*\n\n`+
+    `✅ Kindly process my order and send it to my Gaming ID. Thank you!`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// TOAST
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+</script>
+</body>
+</html>
